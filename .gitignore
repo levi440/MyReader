@@ -1,0 +1,29 @@
+## Build results
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+
+## Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## NuGet
+*.nupkg
+packages/
+
+## Build artifacts
+publish/
+*.appx
+*.appxbundle
+*.msix
+
+## Data (portable, user-specific)
+data/
+
+## OS files
+Thumbs.db
+.DS_Store

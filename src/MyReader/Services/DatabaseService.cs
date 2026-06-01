@@ -1,0 +1,102 @@
+using Microsoft.Data.Sqlite;
+
+namespace MyReader.Services;
+
+public class DatabaseService
+{
+    private readonly string _connectionString;
+
+    public DatabaseService()
+    {
+        var dbPath = Path.Combine(AppContext.BaseDirectory, "data", "reader.db");
+        Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
+        _connectionString = $"Data Source={dbPath}";
+        Initialize();
+    }
+
+    private void Initialize()
+    {
+        using var conn = new SqliteConnection(_connectionString);
+        conn.Open();
+
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "PRAGMA journal_mode=WAL;";
+        cmd.ExecuteNonQuery();
+
+        cmd.CommandText = """
+            CREATE TABLE IF NOT EXISTS Books (
+                Id TEXT PRIMARY KEY,
+                Title TEXT NOT NULL,
+                Author TEXT,
+                FilePath TEXT NOT NULL,
+                FileType TEXT NOT NULL,
+                CoverPath TEXT,
+                Progress REAL DEFAULT 0,
+                LastReadTime TEXT,
+                AddedTime TEXT NOT NULL,
+                FileSize INTEGER
+            );
+
+            CREATE TABLE IF NOT EXISTS Settings (
+                Key TEXT PRIMARY KEY,
+                Value TEXT NOT NULL
+            );
+            """;
+        cmd.ExecuteNonQuery();
+    }
+
+    public SqliteConnection GetConnection()
+    {
+        var conn = new SqliteConnection(_connectionString);
+        conn.Open();
+        return conn;
+    }
+
+    public async Task SaveBookAsync(Models.Book book)
+    {
+        using var conn = GetConnection();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            INSERT OR REPLACE INTO Books (Id, Title, Author, FilePath, FileType, CoverPath, Progress, LastReadTime, AddedTime, FileSize)
+            VALUES (@Id, @Title, @Author, @FilePath, @FileType, @CoverPath, @Progress, @LastReadTime, @AddedTime, @FileSize);
+            """;
+        cmd.Parameters.AddWithValue("@Id", book.Id);
+        cmd.Parameters.AddWithValue("@Title", book.Title);
+        cmd.Parameters.AddWithValue("@Author", (object?)book.Author ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@FilePath", book.FilePath);
+        cmd.Parameters.AddWithValue("@FileType", book.FileType);
+        cmd.Parameters.AddWithValue("@CoverPath", (object?)book.CoverPath ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@Progress", book.Progress);
+        cmd.Parameters.AddWithValue("@LastReadTime", (object?)book.LastReadTime ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@AddedTime", book.AddedTime);
+        cmd.Parameters.AddWithValue("@FileSize", book.FileSize);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task<List<Models.Book>> GetAllBooksAsync()
+    {
+        using var conn = GetConnection();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT * FROM Books ORDER BY LastReadTime DESC;";
+
+        var books = new List<Models.Book>();
+        using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            books.Add(new Models.Book
+            {
+                Id = reader.GetString(0),
+                Title = reader.GetString(1),
+                Author = reader.IsDBNull(2) ? null : reader.GetString(2),
+                FilePath = reader.GetString(3),
+                FileType = reader.GetString(4),
+                CoverPath = reader.IsDBNull(5) ? null : reader.GetString(5),
+                Progress = reader.GetDouble(6),
+                LastReadTime = reader.IsDBNull(7) ? null : reader.GetString(7),
+                AddedTime = reader.GetString(8),
+                FileSize = reader.GetInt64(9)
+            });
+        }
+        return books;
+    }
+}

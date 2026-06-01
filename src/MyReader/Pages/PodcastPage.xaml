@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="MyReader.Pages.PodcastPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+            <TextBlock
+                Text="播客"
+                Style="{StaticResource TitleTextBlockStyle}"
+                FontSize="28"
+                HorizontalAlignment="Center" />
+            <TextBlock
+                Text="第6阶段实现：播客订阅 + 播放"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                HorizontalAlignment="Center" />
+        </StackPanel>
+    </Grid>
+</Page>

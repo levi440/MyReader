@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="MyReader.Pages.ReaderPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 顶部栏 -->
+        <Grid
+            x:Name="TopBar"
+            Grid.Row="0"
+            Padding="16,8"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Button
+                x:Name="BackButton"
+                Grid.Column="0"
+                Click="BackButton_Click"
+                Style="{StaticResource IconButtonStyle}">
+                <FontIcon Glyph="&#xE72B;" FontSize="16" />
+            </Button>
+
+            <TextBlock
+                x:Name="TitleBlock"
+                Grid.Column="1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Style="{StaticResource BodyStrongTextBlockStyle}"
+                TextTrimming="CharacterEllipsis" />
+
+            <StackPanel
+                Grid.Column="2"
+                Orientation="Horizontal"
+                Spacing="8">
+                <Button
+                    x:Name="ThemeButton"
+                    Click="ThemeButton_Click"
+                    Style="{StaticResource IconButtonStyle}">
+                    <FontIcon Glyph="&#xE793;" FontSize="16" />
+                </Button>
+                <Button
+                    x:Name="SettingsButton"
+                    Click="SettingsButton_Click"
+                    Style="{StaticResource IconButtonStyle}">
+                    <FontIcon Glyph="&#xE713;" FontSize="16" />
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- 阅读区域 -->
+        <WebView2
+            x:Name="ReaderWebView"
+            Grid.Row="1" />
+
+        <!-- 底部栏 -->
+        <Grid
+            x:Name="BottomBar"
+            Grid.Row="2"
+            Padding="16,8"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Button
+                x:Name="PrevChapterButton"
+                Grid.Column="0"
+                Click="PrevChapter_Click"
+                Content="上一章" />
+
+            <Slider
+                x:Name="ProgressSlider"
+                Grid.Column="1"
+                Margin="16,0"
+                Minimum="0"
+                Maximum="100"
+                ValueChanged="ProgressSlider_ValueChanged" />
+
+            <Button
+                x:Name="NextChapterButton"
+                Grid.Column="2"
+                Click="NextChapter_Click"
+                Content="下一章" />
+        </Grid>
+
+        <!-- 设置面板（默认隐藏） -->
+        <Grid
+            x:Name="SettingsPanel"
+            Grid.Row="1"
+            HorizontalAlignment="Right"
+            Width="280"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            Visibility="Collapsed"
+            Padding="16">
+            <StackPanel Spacing="16">
+                <TextBlock Text="阅读设置" Style="{StaticResource SubtitleTextBlockStyle}" />
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="字号" />
+                    <Slider x:Name="FontSizeSlider" Minimum="14" Maximum="28" Value="18" ValueChanged="FontSizeSlider_ValueChanged" />
+                </StackPanel>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="行高" />
+                    <Slider x:Name="LineHeightSlider" Minimum="24" Maximum="48" Value="30" ValueChanged="LineHeightSlider_ValueChanged" />
+                </StackPanel>
+
+                <StackPanel Spacing="8">
+                    <TextBlock Text="主题" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="LightThemeBtn" Content="浅色" Click="ThemeSelect_Click" Tag="light" />
+                        <Button x:Name="SepiaThemeBtn" Content="护眼" Click="ThemeSelect_Click" Tag="sepia" />
+                        <Button x:Name="DarkThemeBtn" Content="深色" Click="ThemeSelect_Click" Tag="dark" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>
