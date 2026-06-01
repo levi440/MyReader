@@ -112,6 +112,30 @@ public class DatabaseService
                 IsStarred INTEGER DEFAULT 0,
                 FOREIGN KEY (FeedId) REFERENCES Feeds(Id) ON DELETE CASCADE
             );
+
+            CREATE TABLE IF NOT EXISTS Podcasts (
+                Id TEXT PRIMARY KEY,
+                Title TEXT NOT NULL,
+                Description TEXT,
+                RssUrl TEXT NOT NULL UNIQUE,
+                CoverUrl TEXT,
+                Author TEXT,
+                LastFetchTime TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS Episodes (
+                Id TEXT PRIMARY KEY,
+                PodcastId TEXT NOT NULL,
+                Title TEXT NOT NULL,
+                Description TEXT,
+                AudioUrl TEXT NOT NULL,
+                Duration INTEGER,
+                PublishDate TEXT NOT NULL,
+                IsPlayed INTEGER DEFAULT 0,
+                PlayPosition REAL DEFAULT 0,
+                IsDownloaded INTEGER DEFAULT 0,
+                FOREIGN KEY (PodcastId) REFERENCES Podcasts(Id) ON DELETE CASCADE
+            );
             """;
         cmd.ExecuteNonQuery();
     }
