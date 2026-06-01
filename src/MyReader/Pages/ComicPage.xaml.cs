@@ -40,7 +40,7 @@ public sealed partial class ComicPage : Page
         picker.FileTypeFilter.Add(".cbr");
         picker.FileTypeFilter.Add(".zip");
 
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Current);
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
         WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
 
         var files = await picker.PickMultipleFilesAsync();

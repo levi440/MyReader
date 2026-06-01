@@ -41,7 +41,7 @@ public sealed partial class LibraryPage : Page
         picker.FileTypeFilter.Add(".txt");
 
         // WinUI 3 需要设置窗口句柄
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Current);
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
         WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
 
         var files = await picker.PickMultipleFilesAsync();
