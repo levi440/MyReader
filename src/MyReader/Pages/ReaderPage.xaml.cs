@@ -52,18 +52,18 @@ public sealed partial class ReaderPage : Page
                 var epubBook = await VersOne.Epub.EpubReader.OpenBookAsync(_book.FilePath);
                 _chapters = new List<string>();
 
-                // 简单方式：读取所有 HTML 文件
-                var htmlFiles = epubBook.Content.Html?.ToList();
+                // 读取所有 HTML 文件
+                var htmlFiles = epubBook.Content.Html;
                 if (htmlFiles != null)
                 {
-                    foreach (var htmlFile in htmlFiles)
+                    foreach (var pair in htmlFiles)
                     {
-                        var html = await htmlFile.ReadContentAsTextAsync();
+                        var html = await pair.Value.ReadContentAsTextAsync();
                         _chapters.Add(html);
                     }
                 }
 
-                content = _chapters.Count > 0 ? _chapters[0] : "<p>无法加载内容</p>";
+                content = _chapters.Count > 0 ? _chapters[0] : $"<h1>{epubBook.Title ?? _book.Title}</h1><p>EPUB 文件已加载，共 {_chapters.Count} 章</p>";
             }
             else
             {
