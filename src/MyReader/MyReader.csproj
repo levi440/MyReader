@@ -60,7 +60,7 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.*" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="9.*" />
     <PackageReference Include="PDFsharp" Version="6.2.4" />
-    <PackageReference Include="VersOne.Epub" Version="3.3.6" />
+    <PackageReference Include="VersOne.Epub" Version="3.0.0" />
   </ItemGroup>
 
   <!--
