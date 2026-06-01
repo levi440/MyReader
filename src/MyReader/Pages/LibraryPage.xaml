@@ -29,15 +29,22 @@
                 Style="{StaticResource TitleTextBlockStyle}"
                 VerticalAlignment="Center" />
 
-            <Button
-                x:Name="AddBookButton"
-                Grid.Column="1"
-                Click="AddBook_Click">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon Glyph="&#xE710;" />
-                    <TextBlock Text="添加书籍" />
-                </StackPanel>
-            </Button>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Button
+                    x:Name="RefreshButton"
+                    Click="Refresh_Click"
+                    Style="{StaticResource IconButtonStyle}">
+                    <FontIcon Glyph="&#xE72C;" />
+                </Button>
+                <Button
+                    x:Name="AddBookButton"
+                    Click="AddBook_Click">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE710;" />
+                        <TextBlock Text="添加书籍" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
         </Grid>
 
         <!-- 书籍网格 -->
@@ -47,7 +54,8 @@
             Padding="16"
             IsItemClickEnabled="True"
             ItemClick="BookGrid_ItemClick"
-            SelectionMode="None">
+            SelectionMode="None"
+            ContextRequested="BookGrid_ContextRequested">
             <GridView.ItemTemplate>
                 <DataTemplate>
                     <Grid
@@ -64,9 +72,25 @@
                             Grid.Row="0"
                             CornerRadius="4"
                             Background="{ThemeResource ControlStrokeColorDefaultBrush}">
-                            <Image
-                                Source="{Binding CoverPath}"
-                                Stretch="UniformToFill" />
+                            <Grid>
+                                <Image
+                                    Source="{Binding CoverPath}"
+                                    Stretch="UniformToFill" />
+                                <!-- 文件类型标签 -->
+                                <Border
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Margin="4"
+                                    Padding="4,2"
+                                    CornerRadius="4"
+                                    Background="{ThemeResource AccentFillColorDefaultBrush}">
+                                    <TextBlock
+                                        Text="{Binding FileType}"
+                                        FontSize="10"
+                                        Foreground="White"
+                                        FontWeight="SemiBold" />
+                                </Border>
+                            </Grid>
                         </Border>
 
                         <!-- 进度条 -->
@@ -78,6 +102,7 @@
                             CornerRadius="2">
                             <Border Background="{ThemeResource ControlStrokeColorDefaultBrush}" CornerRadius="2" />
                             <Border
+                                x:Name="ProgressBorder"
                                 Background="{ThemeResource AccentFillColorDefaultBrush}"
                                 HorizontalAlignment="Left"
                                 CornerRadius="2"
@@ -110,6 +135,21 @@
                     <Setter Property="Margin" Value="4" />
                 </Style>
             </GridView.ItemContainerStyle>
+
+            <GridView.ContextFlyout>
+                <MenuFlyout>
+                    <MenuFlyoutItem
+                        x:Name="OpenBookMenu"
+                        Text="打开"
+                        Click="OpenBook_Click" />
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem
+                        x:Name="DeleteBookMenu"
+                        Text="删除"
+                        Click="DeleteBook_Click"
+                        Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                </MenuFlyout>
+            </GridView.ContextFlyout>
         </GridView>
 
         <!-- 空状态提示 -->

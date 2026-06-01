@@ -10,6 +10,7 @@ public sealed partial class LibraryPage : Page
 {
     private readonly FileImportService _importService;
     private List<Book> _books = new();
+    private Book? _selectedBook;
 
     public LibraryPage()
     {
@@ -40,7 +41,6 @@ public sealed partial class LibraryPage : Page
         picker.FileTypeFilter.Add(".pdf");
         picker.FileTypeFilter.Add(".txt");
 
-        // WinUI 3 需要设置窗口句柄
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
         WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
 
@@ -61,5 +61,48 @@ public sealed partial class LibraryPage : Page
         {
             Frame.Navigate(typeof(ReaderPage), book);
         }
+    }
+
+    private void BookGrid_ContextRequested(UIElement sender, Microsoft.UI.Xaml.Input.ContextRequestedEventArgs args)
+    {
+        if (args.OriginalSource is FrameworkElement element && element.DataContext is Book book)
+        {
+            _selectedBook = book;
+        }
+    }
+
+    private void OpenBook_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedBook != null)
+        {
+            Frame.Navigate(typeof(ReaderPage), _selectedBook);
+        }
+    }
+
+    private async void DeleteBook_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedBook == null) return;
+
+        var dialog = new ContentDialog
+        {
+            Title = "删除书籍",
+            Content = $"确定要删除《{_selectedBook.Title}》吗？",
+            PrimaryButtonText = "删除",
+            CloseButtonText = "取消",
+            DefaultButton = ContentDialogButton.Close
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            await App.Database.DeleteBookAsync(_selectedBook.Id);
+            _selectedBook = null;
+            await LoadBooks();
+        }
+    }
+
+    private async void Refresh_Click(object sender, RoutedEventArgs e)
+    {
+        await LoadBooks();
     }
 }

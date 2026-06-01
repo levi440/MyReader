@@ -19,6 +19,13 @@ public sealed partial class ReaderPage : Page
     public ReaderPage()
     {
         InitializeComponent();
+        this.Loaded += ReaderPage_Loaded;
+    }
+
+    private async void ReaderPage_Loaded(object sender, RoutedEventArgs e)
+    {
+        // 等待 WebView2 初始化
+        await ReaderWebView.EnsureCoreWebView2Async();
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -29,6 +36,9 @@ public sealed partial class ReaderPage : Page
         {
             _book = book;
             TitleBlock.Text = book.Title;
+
+            // 等待页面加载完成后再加载内容
+            await Task.Delay(100);
             await LoadBookContent();
         }
     }
@@ -39,6 +49,13 @@ public sealed partial class ReaderPage : Page
 
         try
         {
+            // 检查文件是否存在
+            if (!File.Exists(_book.FilePath))
+            {
+                ShowError("文件不存在");
+                return;
+            }
+
             string content;
             if (_book.FileType == "txt")
             {
@@ -58,8 +75,16 @@ public sealed partial class ReaderPage : Page
                 {
                     foreach (var pair in htmlFiles)
                     {
-                        var html = await pair.Value.ReadContentAsTextAsync();
-                        _chapters.Add(html);
+                        try
+                        {
+                            var html = await pair.Value.ReadContentAsTextAsync();
+                            if (!string.IsNullOrEmpty(html))
+                                _chapters.Add(html);
+                        }
+                        catch
+                        {
+                            // 跳过无法读取的章节
+                        }
                     }
                 }
 
@@ -71,13 +96,33 @@ public sealed partial class ReaderPage : Page
             }
 
             var htmlContent = HtmlTemplateBuilder.BuildReadingHtml(content, _currentTheme, _fontSize, _lineHeight);
-            ReaderWebView.NavigateToString(htmlContent);
+
+            // 确保 WebView2 已初始化
+            if (ReaderWebView.CoreWebView2 != null)
+            {
+                ReaderWebView.NavigateToString(htmlContent);
+            }
+            else
+            {
+                await ReaderWebView.EnsureCoreWebView2Async();
+                ReaderWebView.NavigateToString(htmlContent);
+            }
         }
         catch (Exception ex)
         {
-            var errorHtml = HtmlTemplateBuilder.BuildReadingHtml($"<p>加载失败：{ex.Message}</p>", _currentTheme, _fontSize, _lineHeight);
-            ReaderWebView.NavigateToString(errorHtml);
+            ShowError($"加载失败：{ex.Message}");
         }
+    }
+
+    private async void ShowError(string message)
+    {
+        var errorHtml = HtmlTemplateBuilder.BuildReadingHtml($"<p style='color: red;'>{message}</p>", _currentTheme, _fontSize, _lineHeight);
+
+        if (ReaderWebView.CoreWebView2 == null)
+        {
+            await ReaderWebView.EnsureCoreWebView2Async();
+        }
+        ReaderWebView.NavigateToString(errorHtml);
     }
 
     private List<string> SplitChapters(string text)

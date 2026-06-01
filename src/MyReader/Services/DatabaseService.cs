@@ -194,4 +194,24 @@ public class DatabaseService
         }
         return books;
     }
+
+    public async Task DeleteBookAsync(string bookId)
+    {
+        using var conn = GetConnection();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "DELETE FROM Books WHERE Id = @Id;";
+        cmd.Parameters.AddWithValue("@Id", bookId);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    public async Task UpdateBookProgressAsync(string bookId, double progress)
+    {
+        using var conn = GetConnection();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "UPDATE Books SET Progress = @Progress, LastReadTime = @LastReadTime WHERE Id = @Id;";
+        cmd.Parameters.AddWithValue("@Id", bookId);
+        cmd.Parameters.AddWithValue("@Progress", progress);
+        cmd.Parameters.AddWithValue("@LastReadTime", DateTime.Now.ToString("O"));
+        await cmd.ExecuteNonQueryAsync();
+    }
 }
