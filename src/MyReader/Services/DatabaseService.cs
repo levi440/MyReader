@@ -64,6 +64,29 @@ public class DatabaseService
                 SearchUrl TEXT,
                 LastUseTime TEXT
             );
+
+            CREATE TABLE IF NOT EXISTS Comics (
+                Id TEXT PRIMARY KEY,
+                Title TEXT NOT NULL,
+                Author TEXT,
+                FilePath TEXT,
+                SourceType TEXT NOT NULL DEFAULT 'local',
+                SourceUrl TEXT,
+                CoverPath TEXT,
+                ChapterIndex INTEGER DEFAULT 0,
+                PageIndex INTEGER DEFAULT 0,
+                AddedTime TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS ComicSources (
+                Id TEXT PRIMARY KEY,
+                Name TEXT NOT NULL,
+                SourceUrl TEXT,
+                RuleSearch TEXT,
+                RuleChapters TEXT,
+                RulePages TEXT,
+                Enabled INTEGER DEFAULT 1
+            );
             """;
         cmd.ExecuteNonQuery();
     }
