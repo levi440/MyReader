@@ -87,6 +87,31 @@ public class DatabaseService
                 RulePages TEXT,
                 Enabled INTEGER DEFAULT 1
             );
+
+            CREATE TABLE IF NOT EXISTS Feeds (
+                Id TEXT PRIMARY KEY,
+                Title TEXT NOT NULL,
+                Description TEXT,
+                Url TEXT NOT NULL UNIQUE,
+                SiteUrl TEXT,
+                Icon TEXT,
+                LastFetchTime TEXT,
+                ErrorMessage TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS Articles (
+                Id TEXT PRIMARY KEY,
+                FeedId TEXT NOT NULL,
+                Title TEXT NOT NULL,
+                Summary TEXT,
+                Content TEXT,
+                Link TEXT,
+                Author TEXT,
+                PublishDate TEXT NOT NULL,
+                IsRead INTEGER DEFAULT 0,
+                IsStarred INTEGER DEFAULT 0,
+                FOREIGN KEY (FeedId) REFERENCES Feeds(Id) ON DELETE CASCADE
+            );
             """;
         cmd.ExecuteNonQuery();
     }
