@@ -41,6 +41,29 @@ public class DatabaseService
                 Key TEXT PRIMARY KEY,
                 Value TEXT NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS BookSources (
+                Id TEXT PRIMARY KEY,
+                BookSourceUrl TEXT NOT NULL,
+                BookSourceName TEXT NOT NULL,
+                BookSourceGroup TEXT,
+                BookSourceType INTEGER DEFAULT 0,
+                BookSourceComment TEXT,
+                LoginUrl TEXT,
+                Header TEXT,
+                RuleSearch TEXT,
+                RuleBookInfo TEXT,
+                RuleToc TEXT,
+                RuleContent TEXT,
+                RuleExplore TEXT,
+                Weight INTEGER DEFAULT 0,
+                CustomOrder INTEGER DEFAULT 0,
+                Enabled INTEGER DEFAULT 1,
+                EnabledExplore INTEGER DEFAULT 0,
+                ConcurrentRate TEXT,
+                SearchUrl TEXT,
+                LastUseTime TEXT
+            );
             """;
         cmd.ExecuteNonQuery();
     }
