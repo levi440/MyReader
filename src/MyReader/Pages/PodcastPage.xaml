@@ -54,7 +54,8 @@
                 x:Name="PodcastList"
                 Grid.Row="1"
                 Padding="8"
-                SelectionChanged="PodcastList_SelectionChanged">
+                SelectionChanged="PodcastList_SelectionChanged"
+                ContextRequested="PodcastList_ContextRequested">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Padding="8" Spacing="4">
@@ -72,6 +73,18 @@
                         </StackPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
+                <ListView.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem
+                            Text="刷新"
+                            Click="RefreshPodcast_Click" />
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem
+                            Text="删除"
+                            Click="DeletePodcast_Click"
+                            Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                    </MenuFlyout>
+                </ListView.ContextFlyout>
             </ListView>
 
             <!-- 空状态 -->

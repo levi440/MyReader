@@ -50,6 +50,14 @@ public sealed partial class FeedPage : Page
         ArticleList.Visibility = articles.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    private void FeedList_ContextRequested(UIElement sender, Microsoft.UI.Xaml.Input.ContextRequestedEventArgs args)
+    {
+        if (args.OriginalSource is FrameworkElement element && element.DataContext is FeedSource feed)
+        {
+            _selectedFeed = feed;
+        }
+    }
+
     private async void AddFeed_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new ContentDialog
@@ -79,14 +87,43 @@ public sealed partial class FeedPage : Page
         }
     }
 
+    private async void RefreshFeed_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedFeed == null) return;
+
+        await _feedService.RefreshFeedAsync(_selectedFeed.Id);
+        await LoadArticles(_selectedFeed.Id);
+    }
+
+    private async void DeleteFeed_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedFeed == null) return;
+
+        var dialog = new ContentDialog
+        {
+            Title = "删除订阅",
+            Content = $"确定要删除《{_selectedFeed.Title}》吗？",
+            PrimaryButtonText = "删除",
+            CloseButtonText = "取消",
+            DefaultButton = ContentDialogButton.Close
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            await _feedService.DeleteFeedAsync(_selectedFeed.Id);
+            _selectedFeed = null;
+            await LoadFeeds();
+            ArticleList.ItemsSource = null;
+        }
+    }
+
     private async void ArticleList_ItemClick(object sender, ItemClickEventArgs e)
     {
         if (e.ClickedItem is FeedArticle article)
         {
-            // 标记为已读
             await _feedService.MarkAsReadAsync(article.Id);
 
-            // 打开文章
             if (!string.IsNullOrEmpty(article.Link))
             {
                 await Windows.System.Launcher.LaunchUriAsync(new Uri(article.Link));

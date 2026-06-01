@@ -15,17 +15,11 @@ public sealed partial class ReaderPage : Page
     private int _lineHeight = 30;
     private int _currentChapter = 0;
     private List<string> _chapters = new();
+    private bool _isWebViewReady = false;
 
     public ReaderPage()
     {
         InitializeComponent();
-        this.Loaded += ReaderPage_Loaded;
-    }
-
-    private async void ReaderPage_Loaded(object sender, RoutedEventArgs e)
-    {
-        // 等待 WebView2 初始化
-        await ReaderWebView.EnsureCoreWebView2Async();
     }
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -37,19 +31,20 @@ public sealed partial class ReaderPage : Page
             _book = book;
             TitleBlock.Text = book.Title;
 
-            // 等待页面加载完成后再加载内容
-            await Task.Delay(100);
+            // 等待 WebView2 初始化完成
+            await ReaderWebView.EnsureCoreWebView2Async();
+            _isWebViewReady = true;
+
             await LoadBookContent();
         }
     }
 
     private async Task LoadBookContent()
     {
-        if (_book == null) return;
+        if (_book == null || !_isWebViewReady) return;
 
         try
         {
-            // 检查文件是否存在
             if (!File.Exists(_book.FilePath))
             {
                 ShowError("文件不存在");
@@ -69,7 +64,6 @@ public sealed partial class ReaderPage : Page
                 var epubBook = await VersOne.Epub.EpubReader.OpenBookAsync(_book.FilePath);
                 _chapters = new List<string>();
 
-                // 读取所有 HTML 文件
                 var htmlFiles = epubBook.Content.Html;
                 if (htmlFiles != null)
                 {
@@ -81,10 +75,7 @@ public sealed partial class ReaderPage : Page
                             if (!string.IsNullOrEmpty(html))
                                 _chapters.Add(html);
                         }
-                        catch
-                        {
-                            // 跳过无法读取的章节
-                        }
+                        catch { }
                     }
                 }
 
@@ -96,17 +87,7 @@ public sealed partial class ReaderPage : Page
             }
 
             var htmlContent = HtmlTemplateBuilder.BuildReadingHtml(content, _currentTheme, _fontSize, _lineHeight);
-
-            // 确保 WebView2 已初始化
-            if (ReaderWebView.CoreWebView2 != null)
-            {
-                ReaderWebView.NavigateToString(htmlContent);
-            }
-            else
-            {
-                await ReaderWebView.EnsureCoreWebView2Async();
-                ReaderWebView.NavigateToString(htmlContent);
-            }
+            ReaderWebView.NavigateToString(htmlContent);
         }
         catch (Exception ex)
         {
@@ -114,14 +95,9 @@ public sealed partial class ReaderPage : Page
         }
     }
 
-    private async void ShowError(string message)
+    private void ShowError(string message)
     {
         var errorHtml = HtmlTemplateBuilder.BuildReadingHtml($"<p style='color: red;'>{message}</p>", _currentTheme, _fontSize, _lineHeight);
-
-        if (ReaderWebView.CoreWebView2 == null)
-        {
-            await ReaderWebView.EnsureCoreWebView2Async();
-        }
         ReaderWebView.NavigateToString(errorHtml);
     }
 
@@ -148,7 +124,6 @@ public sealed partial class ReaderPage : Page
         if (!string.IsNullOrWhiteSpace(current))
             chapters.Add(current);
 
-        // 如果没有章节，按字数分割
         if (chapters.Count == 0)
         {
             var chunkSize = 3000;
@@ -164,16 +139,24 @@ public sealed partial class ReaderPage : Page
 
     private void UpdateReadingView()
     {
-        if (_chapters.Count > 0 && _currentChapter < _chapters.Count)
-        {
-            var content = _chapters[_currentChapter];
-            var htmlContent = HtmlTemplateBuilder.BuildReadingHtml(content, _currentTheme, _fontSize, _lineHeight);
-            ReaderWebView.NavigateToString(htmlContent);
-        }
+        if (!_isWebViewReady || _chapters.Count == 0 || _currentChapter >= _chapters.Count) return;
+
+        var content = _chapters[_currentChapter];
+        var htmlContent = HtmlTemplateBuilder.BuildReadingHtml(content, _currentTheme, _fontSize, _lineHeight);
+        ReaderWebView.NavigateToString(htmlContent);
+    }
+
+    private async void SaveProgress()
+    {
+        if (_book == null || _chapters.Count == 0) return;
+
+        var progress = (double)_currentChapter / _chapters.Count * 100;
+        await App.Database.UpdateBookProgressAsync(_book.Id, progress);
     }
 
     private void BackButton_Click(object sender, RoutedEventArgs e)
     {
+        SaveProgress();
         if (Frame.CanGoBack)
             Frame.GoBack();
     }
@@ -202,6 +185,7 @@ public sealed partial class ReaderPage : Page
         {
             _currentChapter--;
             UpdateReadingView();
+            SaveProgress();
         }
     }
 
@@ -211,12 +195,21 @@ public sealed partial class ReaderPage : Page
         {
             _currentChapter++;
             UpdateReadingView();
+            SaveProgress();
         }
     }
 
     private void ProgressSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
     {
-        // 进度条逻辑
+        if (_chapters.Count > 0)
+        {
+            var newChapter = (int)(e.NewValue / 100 * _chapters.Count);
+            if (newChapter != _currentChapter && newChapter >= 0 && newChapter < _chapters.Count)
+            {
+                _currentChapter = newChapter;
+                UpdateReadingView();
+            }
+        }
     }
 
     private void FontSizeSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)

@@ -8,10 +8,19 @@ public class DatabaseService
 
     public DatabaseService()
     {
-        var dbPath = Path.Combine(AppContext.BaseDirectory, "data", "reader.db");
-        Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
-        _connectionString = $"Data Source={dbPath}";
-        Initialize();
+        try
+        {
+            var dbPath = Path.Combine(AppContext.BaseDirectory, "data", "reader.db");
+            Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
+            _connectionString = $"Data Source={dbPath}";
+            Initialize();
+        }
+        catch (Exception ex)
+        {
+            // 数据库初始化失败时使用内存数据库作为降级
+            _connectionString = "Data Source=:memory:";
+            System.Diagnostics.Debug.WriteLine($"Database initialization failed: {ex.Message}");
+        }
     }
 
     private void Initialize()

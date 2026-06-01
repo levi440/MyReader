@@ -12,10 +12,10 @@ public class FileImportService
         _db = db;
     }
 
-    public async Task<Book?> ImportFileAsync(string filePath)
+    public async Task<ImportResult> ImportFileAsync(string filePath)
     {
         if (!File.Exists(filePath))
-            return null;
+            return ImportResult.Fail("文件不存在");
 
         var ext = Path.GetExtension(filePath).ToLowerInvariant();
         var fileInfo = new FileInfo(filePath);
@@ -38,17 +38,21 @@ public class FileImportService
         };
 
         if (book.FileType == "unknown")
-            return null;
+            return ImportResult.Fail("不支持的文件格式");
 
         // 提取元数据
         if (ext == ".epub")
-            await ExtractEpubMetadata(book, filePath);
+        {
+            var epubResult = await ExtractEpubMetadata(book, filePath);
+            if (!epubResult.Success)
+                return epubResult;
+        }
 
         await _db.SaveBookAsync(book);
-        return book;
+        return ImportResult.Ok(book);
     }
 
-    private async Task ExtractEpubMetadata(Book book, string filePath)
+    private async Task<ImportResult> ExtractEpubMetadata(Book book, string filePath)
     {
         try
         {
@@ -69,10 +73,12 @@ public class FileImportService
                 await File.WriteAllBytesAsync(coverPath, cover);
                 book.CoverPath = coverPath;
             }
+
+            return ImportResult.Ok(book);
         }
-        catch
+        catch (Exception ex)
         {
-            // 解析失败时使用文件名作为标题
+            return ImportResult.Fail($"EPUB 解析失败：{ex.Message}");
         }
     }
 }

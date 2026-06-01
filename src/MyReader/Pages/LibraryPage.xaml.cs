@@ -47,10 +47,27 @@ public sealed partial class LibraryPage : Page
         var files = await picker.PickMultipleFilesAsync();
         if (files != null && files.Count > 0)
         {
+            var errors = new List<string>();
             foreach (var file in files)
             {
-                await _importService.ImportFileAsync(file.Path);
+                var result = await _importService.ImportFileAsync(file.Path);
+                if (!result.Success && result.ErrorMessage != null)
+                {
+                    errors.Add($"{file.Name}: {result.ErrorMessage}");
+                }
             }
+
+            if (errors.Count > 0)
+            {
+                var dialog = new ContentDialog
+                {
+                    Title = "导入完成",
+                    Content = string.Join("\n", errors),
+                    CloseButtonText = "确定"
+                };
+                await dialog.ShowAsync();
+            }
+
             await LoadBooks();
         }
     }
@@ -95,6 +112,21 @@ public sealed partial class LibraryPage : Page
         var result = await dialog.ShowAsync();
         if (result == ContentDialogResult.Primary)
         {
+            // 删除磁盘文件
+            try
+            {
+                if (!string.IsNullOrEmpty(_selectedBook.FilePath) && File.Exists(_selectedBook.FilePath))
+                {
+                    File.Delete(_selectedBook.FilePath);
+                }
+                if (!string.IsNullOrEmpty(_selectedBook.CoverPath) && File.Exists(_selectedBook.CoverPath))
+                {
+                    File.Delete(_selectedBook.CoverPath);
+                }
+            }
+            catch { }
+
+            // 删除数据库记录
             await App.Database.DeleteBookAsync(_selectedBook.Id);
             _selectedBook = null;
             await LoadBooks();

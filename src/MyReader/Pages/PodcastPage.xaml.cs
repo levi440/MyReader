@@ -50,6 +50,14 @@ public sealed partial class PodcastPage : Page
         EpisodeList.Visibility = episodes.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    private void PodcastList_ContextRequested(UIElement sender, Microsoft.UI.Xaml.Input.ContextRequestedEventArgs args)
+    {
+        if (args.OriginalSource is FrameworkElement element && element.DataContext is PodcastSource podcast)
+        {
+            _selectedPodcast = podcast;
+        }
+    }
+
     private async void AddPodcast_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new ContentDialog
@@ -76,6 +84,37 @@ public sealed partial class PodcastPage : Page
                 await LoadPodcasts();
                 PodcastList.SelectedItem = podcast;
             }
+        }
+    }
+
+    private async void RefreshPodcast_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedPodcast == null) return;
+
+        await _podcastService.RefreshPodcastAsync(_selectedPodcast.Id);
+        await LoadEpisodes(_selectedPodcast.Id);
+    }
+
+    private async void DeletePodcast_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedPodcast == null) return;
+
+        var dialog = new ContentDialog
+        {
+            Title = "删除播客",
+            Content = $"确定要删除《{_selectedPodcast.Title}》吗？",
+            PrimaryButtonText = "删除",
+            CloseButtonText = "取消",
+            DefaultButton = ContentDialogButton.Close
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+        {
+            await _podcastService.DeletePodcastAsync(_selectedPodcast.Id);
+            _selectedPodcast = null;
+            await LoadPodcasts();
+            EpisodeList.ItemsSource = null;
         }
     }
 

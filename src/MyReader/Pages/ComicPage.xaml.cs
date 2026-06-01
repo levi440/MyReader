@@ -58,8 +58,7 @@ public sealed partial class ComicPage : Page
     {
         if (e.ClickedItem is Comic comic)
         {
-            // TODO: 打开漫画阅读器
-            Frame.Navigate(typeof(ReaderPage), comic);
+            Frame.Navigate(typeof(ComicReaderPage), comic);
         }
     }
 }
