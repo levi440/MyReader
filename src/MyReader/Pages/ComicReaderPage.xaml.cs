@@ -38,37 +38,44 @@ public sealed partial class ComicReaderPage : Page
     {
         if (_comic == null || _comicService == null) return;
 
-        try
+        await Task.Run(() =>
         {
-            if (_comic.SourceType == "local" && !string.IsNullOrEmpty(_comic.FilePath))
+            try
             {
-                if (!File.Exists(_comic.FilePath))
+                if (_comic.SourceType == "local" && !string.IsNullOrEmpty(_comic.FilePath))
                 {
-                    ShowError("漫画文件不存在");
-                    return;
-                }
+                    if (!File.Exists(_comic.FilePath))
+                    {
+                        DispatcherQueue.TryEnqueue(() => ShowError("漫画文件不存在"));
+                        return;
+                    }
 
-                _pagePaths = _comicService.ExtractPages(_comic.FilePath);
-                if (_pagePaths.Count > 0)
-                {
-                    _currentPage = _comic.PageIndex;
-                    if (_currentPage >= _pagePaths.Count) _currentPage = 0;
-                    ShowPage(_currentPage);
+                    var pages = _comicService.ExtractPages(_comic.FilePath);
+                    DispatcherQueue.TryEnqueue(() =>
+                    {
+                        _pagePaths = pages;
+                        if (_pagePaths.Count > 0)
+                        {
+                            _currentPage = _comic.PageIndex;
+                            if (_currentPage >= _pagePaths.Count) _currentPage = 0;
+                            ShowPage(_currentPage);
+                        }
+                        else
+                        {
+                            ShowError("漫画文件中没有找到图片");
+                        }
+                    });
                 }
                 else
                 {
-                    ShowError("漫画文件中没有找到图片");
+                    DispatcherQueue.TryEnqueue(() => ShowError("暂不支持网络漫画"));
                 }
             }
-            else
+            catch (Exception ex)
             {
-                ShowError("暂不支持网络漫画");
+                DispatcherQueue.TryEnqueue(() => ShowError($"加载失败：{ex.Message}"));
             }
-        }
-        catch (Exception ex)
-        {
-            ShowError($"加载失败：{ex.Message}");
-        }
+        });
     }
 
     private void ShowPage(int pageIndex)

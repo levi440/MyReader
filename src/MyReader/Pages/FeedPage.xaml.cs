@@ -65,7 +65,8 @@ public sealed partial class FeedPage : Page
             Title = "添加 RSS 订阅",
             PrimaryButtonText = "添加",
             CloseButtonText = "取消",
-            DefaultButton = ContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = XamlRoot
         };
 
         var urlBox = new TextBox
@@ -105,7 +106,8 @@ public sealed partial class FeedPage : Page
             Content = $"确定要删除《{_selectedFeed.Title}》吗？",
             PrimaryButtonText = "删除",
             CloseButtonText = "取消",
-            DefaultButton = ContentDialogButton.Close
+            DefaultButton = ContentDialogButton.Close,
+            XamlRoot = XamlRoot
         };
 
         var result = await dialog.ShowAsync();

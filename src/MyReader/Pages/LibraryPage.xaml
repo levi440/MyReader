@@ -55,7 +55,7 @@
             IsItemClickEnabled="True"
             ItemClick="BookGrid_ItemClick"
             SelectionMode="None"
-            ContextRequested="BookGrid_ContextRequested">
+            RightTapped="BookGrid_RightTapped">
             <GridView.ItemTemplate>
                 <DataTemplate>
                     <Grid

@@ -8,12 +8,18 @@ namespace MyReader.Pages;
 public sealed partial class PodcastPage : Page
 {
     private readonly PodcastService _podcastService;
+    private readonly AudioPlayerService _audioPlayer;
     private PodcastSource? _selectedPodcast;
+    private PodcastEpisode? _currentEpisode;
 
     public PodcastPage()
     {
         InitializeComponent();
         _podcastService = new PodcastService(App.Database);
+        _audioPlayer = new AudioPlayerService();
+        _audioPlayer.PlaybackStarted += AudioPlayer_PlaybackStarted;
+        _audioPlayer.PlaybackStopped += AudioPlayer_PlaybackStopped;
+        _audioPlayer.ErrorOccurred += AudioPlayer_ErrorOccurred;
         Loaded += PodcastPage_Loaded;
     }
 
@@ -65,7 +71,8 @@ public sealed partial class PodcastPage : Page
             Title = "添加播客",
             PrimaryButtonText = "添加",
             CloseButtonText = "取消",
-            DefaultButton = ContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = XamlRoot
         };
 
         var urlBox = new TextBox
@@ -105,7 +112,8 @@ public sealed partial class PodcastPage : Page
             Content = $"确定要删除《{_selectedPodcast.Title}》吗？",
             PrimaryButtonText = "删除",
             CloseButtonText = "取消",
-            DefaultButton = ContentDialogButton.Close
+            DefaultButton = ContentDialogButton.Close,
+            XamlRoot = XamlRoot
         };
 
         var result = await dialog.ShowAsync();
@@ -118,11 +126,68 @@ public sealed partial class PodcastPage : Page
         }
     }
 
-    private void EpisodeList_ItemClick(object sender, ItemClickEventArgs e)
+    private async void EpisodeList_ItemClick(object sender, ItemClickEventArgs e)
     {
         if (e.ClickedItem is PodcastEpisode episode)
         {
-            // TODO: 播放音频
+            _currentEpisode = episode;
+
+            // 标记为已播放
+            await _podcastService.UpdatePlayPositionAsync(episode.Id, 0, true);
+
+            // 播放音频
+            if (!string.IsNullOrEmpty(episode.AudioUrl))
+            {
+                var confirmDialog = new ContentDialog
+                {
+                    Title = "播放播客",
+                    Content = $"要播放《{episode.Title}》吗？\n\n将使用系统默认播放器打开。",
+                    PrimaryButtonText = "播放",
+                    CloseButtonText = "取消",
+                    DefaultButton = ContentDialogButton.Primary,
+                    XamlRoot = XamlRoot
+                };
+
+                var result = await confirmDialog.ShowAsync();
+                if (result == ContentDialogResult.Primary)
+                {
+                    _audioPlayer.Play(episode.AudioUrl);
+                }
+            }
+            else
+            {
+                var errorDialog = new ContentDialog
+                {
+                    Title = "播放失败",
+                    Content = "该单集没有音频链接",
+                    CloseButtonText = "确定",
+                    XamlRoot = XamlRoot
+                };
+                await errorDialog.ShowAsync();
+            }
         }
+    }
+
+    private void AudioPlayer_PlaybackStarted(object? sender, EventArgs e)
+    {
+    }
+
+    private void AudioPlayer_PlaybackStopped(object? sender, EventArgs e)
+    {
+    }
+
+    private async void AudioPlayer_ErrorOccurred(object? sender, string error)
+    {
+        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+        {
+            var dialog = new ContentDialog
+            {
+                Title = "播放错误",
+                Content = error,
+                CloseButtonText = "确定",
+                XamlRoot = XamlRoot
+            };
+            await dialog.ShowAsync();
+        });
     }
 }

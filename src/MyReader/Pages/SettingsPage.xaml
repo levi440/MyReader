@@ -77,7 +77,12 @@
                                 Minimum="14"
                                 Maximum="28"
                                 Value="18"
+                                ValueChanged="DefaultFontSizeSlider_ValueChanged"
                                 Width="200" />
+                            <TextBlock
+                                x:Name="FontSizeLabel"
+                                VerticalAlignment="Center"
+                                Text="18" />
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Spacing="16">
@@ -90,7 +95,12 @@
                                 Minimum="24"
                                 Maximum="48"
                                 Value="30"
+                                ValueChanged="DefaultLineHeightSlider_ValueChanged"
                                 Width="200" />
+                            <TextBlock
+                                x:Name="LineHeightLabel"
+                                VerticalAlignment="Center"
+                                Text="30" />
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>
@@ -114,7 +124,9 @@
                             <TextBlock
                                 x:Name="DataPathText"
                                 VerticalAlignment="Center"
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                TextTrimming="CharacterEllipsis"
+                                MaxWidth="300" />
                             <Button
                                 Content="打开"
                                 Click="OpenDataFolder_Click" />
@@ -129,6 +141,83 @@
                                 x:Name="DbSizeText"
                                 VerticalAlignment="Center"
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <TextBlock
+                                Text="书籍数量"
+                                VerticalAlignment="Center"
+                                MinWidth="80" />
+                            <TextBlock
+                                x:Name="BookCountText"
+                                VerticalAlignment="Center"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- 书源管理 -->
+                <StackPanel Spacing="12">
+                    <TextBlock
+                        Text="书源管理"
+                        Style="{StaticResource SubtitleTextBlockStyle}" />
+
+                    <StackPanel
+                        Padding="16"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Spacing="16">
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <TextBlock
+                                Text="书源数量"
+                                VerticalAlignment="Center"
+                                MinWidth="80" />
+                            <TextBlock
+                                x:Name="SourceCountText"
+                                VerticalAlignment="Center"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button
+                                Content="导出书源"
+                                Click="ExportSources_Click" />
+                            <Button
+                                Content="导入书源"
+                                Click="ImportSources_Click" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- RSS 订阅 -->
+                <StackPanel Spacing="12">
+                    <TextBlock
+                        Text="RSS 订阅"
+                        Style="{StaticResource SubtitleTextBlockStyle}" />
+
+                    <StackPanel
+                        Padding="16"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Spacing="16">
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <TextBlock
+                                Text="订阅数量"
+                                VerticalAlignment="Center"
+                                MinWidth="80" />
+                            <TextBlock
+                                x:Name="FeedCountText"
+                                VerticalAlignment="Center"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button
+                                Content="导出订阅 (OPML)"
+                                Click="ExportFeeds_Click" />
+                            <Button
+                                Content="导入订阅"
+                                Click="ImportFeeds_Click" />
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>

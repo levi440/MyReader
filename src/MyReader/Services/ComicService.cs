@@ -1,6 +1,7 @@
-using System.IO.Compression;
 using AngleSharp;
 using MyReader.Models;
+using SharpCompress.Archives;
+using SharpCompress.Common;
 
 namespace MyReader.Services;
 
@@ -59,7 +60,7 @@ public class ComicService
     }
 
     /// <summary>
-    /// 解压漫画文件，返回图片路径列表
+    /// 解压漫画文件，返回图片路径列表（支持 ZIP/CBR/RAR）
     /// </summary>
     public List<string> ExtractPages(string filePath)
     {
@@ -69,24 +70,34 @@ public class ComicService
 
         try
         {
-            using var archive = ZipFile.OpenRead(filePath);
+            using var archive = ArchiveFactory.Open(filePath);
 
             var pages = new List<string>();
             foreach (var entry in archive.Entries)
             {
-                if (string.IsNullOrEmpty(entry.Name)) continue;
-                var ext = Path.GetExtension(entry.Name).ToLowerInvariant();
+                if (entry.IsDirectory) continue;
+                if (string.IsNullOrEmpty(entry.Key)) continue;
+
+                var ext = Path.GetExtension(entry.Key).ToLowerInvariant();
                 if (ext is not (".jpg" or ".jpeg" or ".png" or ".webp" or ".gif")) continue;
 
-                var outPath = Path.Combine(tempDir, entry.Name);
-                entry.ExtractToFile(outPath);
+                var outPath = Path.Combine(tempDir, entry.Key);
+                var outDir = Path.GetDirectoryName(outPath);
+                if (!string.IsNullOrEmpty(outDir) && !Directory.Exists(outDir))
+                    Directory.CreateDirectory(outDir);
+
+                using var stream = entry.OpenEntryStream();
+                using var fileStream = File.Create(outPath);
+                stream.CopyTo(fileStream);
+
                 pages.Add(outPath);
             }
 
             return pages.OrderBy(p => p).ToList();
         }
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"ExtractPages failed: {ex.Message}");
             return new List<string>();
         }
     }

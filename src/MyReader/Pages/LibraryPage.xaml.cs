@@ -63,7 +63,8 @@ public sealed partial class LibraryPage : Page
                 {
                     Title = "导入完成",
                     Content = string.Join("\n", errors),
-                    CloseButtonText = "确定"
+                    CloseButtonText = "确定",
+                    XamlRoot = XamlRoot
                 };
                 await dialog.ShowAsync();
             }
@@ -80,12 +81,33 @@ public sealed partial class LibraryPage : Page
         }
     }
 
-    private void BookGrid_ContextRequested(UIElement sender, Microsoft.UI.Xaml.Input.ContextRequestedEventArgs args)
+    private void BookGrid_RightTapped(object sender, Microsoft.UI.Xaml.Input.RightTappedRoutedEventArgs e)
     {
-        if (args.OriginalSource is FrameworkElement element && element.DataContext is Book book)
+        // 获取右键点击的元素
+        if (e.OriginalSource is FrameworkElement element)
         {
-            _selectedBook = book;
+            // 尝试从元素或其父元素获取 Book 数据
+            var book = FindBookFromElement(element);
+            if (book != null)
+            {
+                _selectedBook = book;
+            }
         }
+    }
+
+    /// <summary>
+    /// 从元素向上查找 Book 数据
+    /// </summary>
+    private Book? FindBookFromElement(FrameworkElement element)
+    {
+        var current = element;
+        while (current != null)
+        {
+            if (current.DataContext is Book book)
+                return book;
+            current = current.Parent as FrameworkElement;
+        }
+        return null;
     }
 
     private void OpenBook_Click(object sender, RoutedEventArgs e)
@@ -98,36 +120,36 @@ public sealed partial class LibraryPage : Page
 
     private async void DeleteBook_Click(object sender, RoutedEventArgs e)
     {
-        if (_selectedBook == null) return;
+        if (_selectedBook == null)
+        {
+            var noBookDialog = new ContentDialog
+            {
+                Title = "提示",
+                Content = "请先右键点击要删除的书籍",
+                CloseButtonText = "确定",
+                XamlRoot = XamlRoot
+            };
+            await noBookDialog.ShowAsync();
+            return;
+        }
+
+        var bookToDelete = _selectedBook;
 
         var dialog = new ContentDialog
         {
-            Title = "删除书籍",
-            Content = $"确定要删除《{_selectedBook.Title}》吗？",
-            PrimaryButtonText = "删除",
+            Title = "从书架移除",
+            Content = $"确定要从书架中移除《{bookToDelete.Title}》吗？\n\n原始文件不会被删除。",
+            PrimaryButtonText = "移除",
             CloseButtonText = "取消",
-            DefaultButton = ContentDialogButton.Close
+            DefaultButton = ContentDialogButton.Close,
+            XamlRoot = XamlRoot
         };
 
         var result = await dialog.ShowAsync();
         if (result == ContentDialogResult.Primary)
         {
-            // 删除磁盘文件
-            try
-            {
-                if (!string.IsNullOrEmpty(_selectedBook.FilePath) && File.Exists(_selectedBook.FilePath))
-                {
-                    File.Delete(_selectedBook.FilePath);
-                }
-                if (!string.IsNullOrEmpty(_selectedBook.CoverPath) && File.Exists(_selectedBook.CoverPath))
-                {
-                    File.Delete(_selectedBook.CoverPath);
-                }
-            }
-            catch { }
-
-            // 删除数据库记录
-            await App.Database.DeleteBookAsync(_selectedBook.Id);
+            // 只删除数据库记录，不删除磁盘文件
+            await App.Database.DeleteBookAsync(bookToDelete.Id);
             _selectedBook = null;
             await LoadBooks();
         }

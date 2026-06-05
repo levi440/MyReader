@@ -6,13 +6,20 @@ public class DatabaseService
 {
     private readonly string _connectionString;
 
-    public DatabaseService()
+    public DatabaseService(bool useMemory = false)
     {
         try
         {
-            var dbPath = Path.Combine(AppContext.BaseDirectory, "data", "reader.db");
-            Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
-            _connectionString = $"Data Source={dbPath}";
+            if (useMemory)
+            {
+                _connectionString = "Data Source=:memory:";
+            }
+            else
+            {
+                var dbPath = Path.Combine(AppContext.BaseDirectory, "data", "reader.db");
+                Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
+                _connectionString = $"Data Source={dbPath}";
+            }
             Initialize();
         }
         catch (Exception ex)
@@ -20,6 +27,7 @@ public class DatabaseService
             // 数据库初始化失败时使用内存数据库作为降级
             _connectionString = "Data Source=:memory:";
             System.Diagnostics.Debug.WriteLine($"Database initialization failed: {ex.Message}");
+            Initialize();
         }
     }
 
